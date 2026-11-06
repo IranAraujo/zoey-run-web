@@ -90,13 +90,62 @@ body {
 	z-index: 1;
 }
 		</style>
-		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#151324">
 <link rel="icon" type="image/png" href="icon.png">
+<style>
+/* Mobile Landscape & Portrait Warning Styles */
+#orientation-overlay {
+	display: none;
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: linear-gradient(135deg, #0d111d 0%, #171d2e 100%);
+	z-index: 999999;
+	color: white;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	text-align: center;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 24px;
+	box-sizing: border-box;
+}
+@media screen and (orientation: portrait) and (max-width: 950px) {
+	#orientation-overlay {
+		display: flex !important;
+	}
+}
+@keyframes phoneRotateAnim {
+	0% { transform: rotate(0deg); }
+	40% { transform: rotate(-90deg); }
+	60% { transform: rotate(-90deg); }
+	100% { transform: rotate(0deg); }
+}
+.rotate-phone-icon {
+	font-size: 72px;
+	display: inline-block;
+	animation: phoneRotateAnim 2.4s infinite ease-in-out;
+	margin-bottom: 16px;
+}
+</style>
 
 	</head>
 	<body>
+
+<div id="orientation-overlay">
+	<div class="rotate-phone-icon">📱</div>
+	<h2 style="color: #ff9e2c; font-size: 24px; margin: 0 0 10px 0; font-weight: 800; letter-spacing: 0.5px;">VIRE O CELULAR NA HORIZONTAL!</h2>
+	<p style="color: #cbd5e1; font-size: 16px; max-width: 340px; margin: 0 0 16px 0; line-height: 1.45;">
+		Para jogar <b>Zoey Run!</b> com a melhor visão dos obstáculos e botões grandes confortáveis, coloque seu aparelho em <b>Modo Paisagem</b>!
+	</p>
+	<div style="background: rgba(255,158,44,0.15); border: 1px solid #ff9e2c; border-radius: 12px; padding: 10px 18px; font-size: 14px; color: #fde047;">
+		✨ Toque na tela para rodar em <b>Tela Cheia</b>!
+	</div>
+</div>
+
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
@@ -113,7 +162,15 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 27758908, "index.wasm": 39514754}, "focusCanvasOnStart": true, "mainPack": "index.pck", "serviceWorker": ""};
+
+const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+	|| (('ontouchstart' in window) && Math.min(window.screen.width, window.screen.height) < 850);
+const GODOT_CONFIG = {"args": [], "canvasResizePolicy": 2, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": {"index.pck": 27763484, "index.wasm": 39514754}, "focusCanvasOnStart": true, "mainPack": "index.pck", "serviceWorker": ""};
+if (isMobileDevice) {
+	GODOT_CONFIG.args = ["--device=mobile"];
+} else {
+	GODOT_CONFIG.args = ["--device=pc"];
+}
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -217,5 +274,40 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 }());
 		</script>
-	</body>
+	
+<script>
+// Auto-detect mobile device & inject --device=mobile arg
+(function() {
+	const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+		|| (('ontouchstart' in window) && Math.min(window.screen.width, window.screen.height) < 850);
+
+	if (typeof GODOT_CONFIG !== 'undefined') {
+		if (isMobileDevice) {
+			GODOT_CONFIG.args = ["--device=mobile"];
+		} else {
+			GODOT_CONFIG.args = ["--device=pc"];
+		}
+	}
+
+	function tryLockLandscapeAndFullscreen() {
+		if (isMobileDevice) {
+			const el = document.documentElement;
+			if (!document.fullscreenElement) {
+				if (el.requestFullscreen) {
+					el.requestFullscreen().catch(() => {});
+				} else if (el.webkitRequestFullscreen) {
+					el.webkitRequestFullscreen();
+				}
+			}
+			if (screen.orientation && screen.orientation.lock) {
+				screen.orientation.lock('landscape').catch(() => {});
+			}
+		}
+	}
+	document.addEventListener('touchstart', tryLockLandscapeAndFullscreen, { passive: true });
+	document.addEventListener('click', tryLockLandscapeAndFullscreen, { passive: true });
+})();
+</script>
+
+</body>
 </html>
